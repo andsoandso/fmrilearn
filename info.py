@@ -1,3 +1,5 @@
+import numpy as np
+
 def print_target_info(targets):
     for name, labels in targets.items():
         print("\tNumber of {0}: {1}".format(name, labels.shape))
