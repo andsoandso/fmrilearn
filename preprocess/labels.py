@@ -20,9 +20,49 @@ def construct_targets(**kwargs):
     return targets
 
 
-def merge_labels(*args):
-    """Combined the given lists into a single list,
-    where each element is joined by an underscore."""
+def merge_labels(labels, labelmap):
+    """Merge labels. 
+    
+    Parameters
+    ----------
+    labels - a 1d array of class labels
+    labelmap - a dict whose keys are the old labels and whose values are the 
+        new labels.
+    
+    Returns
+    -------
+    The merged labels (1d array).  
+    
+    Note
+    ----
+    Labels that do not match a key in labelmap are converted to None or
+        'np.nan'
+    """
+    
+    # Create the new labels
+    newlabels = []
+    for label in labels:
+        try:
+            new = labelmap[label]
+        except KeyError:
+            new = None
+        newlabels.append(new)
+
+    return np.array(newlabels)
+
+
+def join_labels(*args):
+    """Join the N given labels.
+    
+    Parameters
+    ----------
+    (labels1, labels2 ...) Combined N given lists into a single list, where
+    each element is joined by an underscore.
+    
+    Returns
+    -------
+    The joined labels (1d array)
+    """
     
     args = list(args)
     merged = args.pop(0)
