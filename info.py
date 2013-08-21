@@ -8,4 +8,7 @@ def print_X_info(X):
 def print_clf_info(clf):
     print("\tClassifying with {0}".format(clf))
     
-    
+def print_label_counts(labels):
+    print("\tLabel counts:")
+    for lab in np.unique(labels):
+        print("\t({0}, {1})".format(lab, np.sum(lab == labels)))
