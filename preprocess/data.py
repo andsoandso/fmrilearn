@@ -79,6 +79,26 @@ def smooth(X, tr=1.5, ub=0.10, lb=0.001):
     return Xf
 
 
+def shiftby(X, targets, by):
+    """Accounts for HRF lag. Shift X (a single array) and targets 
+    (a list of ys and labs) by <by>. """
+    
+    by = int(by)
+    
+    # Do nothing when by is 0,
+    if by == 0:
+        return X, targets
+    
+    # otherwise shift rows down by
+    X = X[by:,:]  
+
+    # and targets drop by for constant l
+    for key, tar in targets.items():
+        targets[key] = tar[0:(tar.shape[0] - by)] 
+
+    return X, targets
+
+
 def create_X_stats(X, trial_index, labels):
     """Generate trial-level statistics for every feature in X."""
     
