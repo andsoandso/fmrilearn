@@ -2,7 +2,7 @@
 import os
 
 def save_accuracy_table(name, meta, acc, concatenate=True):
-    if ! concatenate:
+    if not(concatenate):
         reset_accuracy_table(name)
     
     f = open(name,'a')

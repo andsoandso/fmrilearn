@@ -1,4 +1,6 @@
 import numpy as np
+from sklearn.preprocessing import scale
+from fmrilearn.preprocess.labels import create_y
 
 def simpleCV(X, labels, cv, clf, verbose=True):
     """Run a simple CV based classification exp. 
@@ -47,7 +49,7 @@ def simpleCV(X, labels, cv, clf, verbose=True):
         clf.fit(scale(Xtrain), ytrain)
 
         truths.append(ytest)
-        predictions.append(clf.predict(scale(Xtest))))
+        predictions.append(clf.predict(scale(Xtest)))
     
     return truths, predictions
 
