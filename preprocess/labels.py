@@ -101,6 +101,19 @@ def create_y(labels):
     return y
 
 
+def locate_short_trials(trial_index, window):
+    """Return the codes of trials less than window"""
+    
+    # Is the i'th trial less than the window,
+    # if yes add it to the list.
+    short_trials = []
+    for i in np.unique(trial_index):
+        if np.sum(i == trial_index) < window:
+            short_trials.append(i)
+    
+    return short_trials
+    
+
 def construct_filter(labels, keepers, indices=True): 
     labels = np.array(labels)
     keepers = list(keepers)
