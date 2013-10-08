@@ -6,6 +6,7 @@ def print_target_info(targets):
 
 def print_X_info(X):
     print("\tX shape: {0}".format(X.shape))
+    print("\t X dtype: {0}".format(X.dtype))
 
 def print_clf_info(clf):
     print("\tClassifying with {0}".format(clf))

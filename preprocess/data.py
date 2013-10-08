@@ -1,14 +1,108 @@
 """Functions for preprocessing fmrilearn data."""
 
+import json
 import numpy as np
 
+import nitime as nt
+import scipy.signal as signal
 from scipy.sparse import csc_matrix
 
-import scipy.signal as signal
-import nitime as nt
+from fmrilearn.preprocess.labels import construct_filter
+from fmrilearn.preprocess.labels import filter_targets
+from fmrilearn.preprocess.labels import merge_labels
 
 
-def find_good_features(X, sparse=True):
+def filterX(filtname, X, targets):
+    """ Use a config file to filter both X and targets.
+
+    Parameters
+    ----------
+    filtname - str, a file path
+        The name of valid json file (see Info)
+    X - 2D array-like (n_samples x n_features)
+        The data to filter
+    targets - dict-like
+        A dictionary of labels/targets for X. Keys 
+        are names and values are sklearn compatible
+        lebels
+
+    Return
+    ------
+        The filtered X, targets
+
+    Info
+    ----
+    The named json file has the must can only have 3 
+    top level nodes ["keep", "merge", "join"], one of
+    which must be present.
+
+    Below each top-level key is a label name which must be 
+    present in targets.
+
+    From there it depends on which top-level branch you are in
+        TODO
+    """
+
+    # load the json at name,
+    filterconf = json(open(filtname, "w"))
+
+    # Validate top level nodes
+    validnodes = ["keep", "merge", "join"]
+    for k in filterconf.keys():
+        if k not in validnodes:
+            raise ValueError("Unknown filter command {0}".format(k))
+
+    # Validate that X and targets match
+    for k, v in targets.iteritem():
+        if v.shape[0] != X.shape[0]:
+            raise ValueError("Shape mismatch for target {0}".format(k))
+
+    # test for keep and do that
+    if "keep" in filterconf:
+        for k, keepers in filterconf["keep"].iteritem():
+            labels = targets[k]    
+            mask = construct_filter(labels, keepers, True)
+            targets = filter_targets(mask, targets)
+            X = X[mask,:]
+
+    # Test for merge and do that
+    if "merge" in filterconf:
+        for k, mmap in filterconf["merge"].iteritem():
+            labels = targets[k]
+            targets[k+"_merged"] = merge_labels(labels, mmap)   
+
+    # Test for join and do that
+    if "join" in filterconf:
+        raise NotImplementedError("join not yet implemented.  Sorry.")
+
+    return X, targets
+
+
+def checkX(X):
+    """Is X OK to use?
+
+    Return
+    ------
+    status: bool, Exception
+        True if OK, error otherwise.
+    """
+
+    status = False
+    if not hasattr(X, "shape"):
+        raise TypeError("X must be array-like")
+    elif X.ndim != 2:
+        raise ValueError("X must be 2d.")
+    elif np.isnan(X).any():
+        raise ValueError("X contains NaNs")
+    elif np.isinf(X).any():
+        raise ValueError("X contains Inf")
+    else:
+        status = True
+
+    return status
+
+
+def find_good_features(X, sparse=True, tol=0.001):
     """Return an index of features (cols) with non-zero and 
     non-constant values."""
 
@@ -19,7 +113,8 @@ def find_good_features(X, sparse=True):
             ## cols built in.  Keep unique only.
     else:
         sds = X.std(axis=0)
-        keepcol = np.arange(X.shape[0])[sds > 0.0001]
+        mask = sds > tol 
+        keepcol = np.arange(X.shape[1])[mask]
             ## For non-sparse remove cols with extremely
             ## low standard deviations.  A different
             ## approach than for sparse, but for fMRI

@@ -7,16 +7,27 @@ from copy import deepcopy
 def construct_targets(**kwargs):
     """Construct a dictionary of training targets.
     
-    Parameters:
+    Parameters
     ----------
-    input a variable number of keyword arguments.  The key is the name the
-    value is the list/array of targets.
+    A variable number of keyword arguments.  
+        The key is the name the value is a list/array of targets.
+
+    Note
+    ----
+    Lengths of lists/arrays must be equal
     """
     
+    # Easier, though less efficient, to build targets
+    # then check the length.
     targets = {}
     for key, val in kwargs.items():
         targets[key] = val
-    
+
+    lenv = len(targets.values()[0])
+    for v in targets.values():
+        if len(v) != lenv:
+            raise ValueError("Target value length mismatch")
+
     return targets
 
 
