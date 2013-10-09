@@ -75,6 +75,8 @@ def filterX(filtname, X, targets):
     if "join" in filterconf:
         raise NotImplementedError("join not yet implemented.  Sorry.")
 
+    assert checkX(X)
+
     return X, targets
 
 
@@ -135,6 +137,8 @@ def remove_invariant_features(X, sparse=True):
     keepcol = find_good_features(X, sparse)
     X = X[:,keepcol]
     
+    assert checkX(X)
+
     if sparse:
          X = csc_matrix(X)
 
@@ -191,6 +195,8 @@ def shiftby(X, targets, by):
     for key, tar in targets.items():
         targets[key] = tar[0:(tar.shape[0] - by)] 
 
+    assert checkX(X)
+
     return X, targets
 
 
@@ -231,4 +237,6 @@ def create_X_stats(X, trial_index, labels):
     
     Xfea = np.hstack([Xmax, Xmin, Xdiff, Xmean, Xvar])
 
+    assert checkX(Xfea)
+    
     return Xfea, np.array(newlabels)
