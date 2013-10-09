@@ -127,7 +127,9 @@ def load_nii(nifiti, clean=True, sparse=False, smooth=False, **kwargs):
         if "lb" in kwargs:
             ub = kwargs["lb"]
         X = smooth(X, tr=tr, ub=ub, lb=lb)
-    checkX(X)
+    
+    assert checkX(X)
+    
     if sparse: 
         X = csc_matrix(X)
 
@@ -144,6 +146,8 @@ def decompose_tcdf(tcdf):
     tcdf = tcdf.drop(labels=["index", "cond", "dataname"], axis=1)
     X = np.array(tcdf.as_matrix())
 
+    assert checkX(X)
+    
     return X, cond, dataname, index
 
 
