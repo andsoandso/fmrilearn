@@ -72,6 +72,29 @@ def correlateX(X, y, corr="spearman"):
 
 
 def eva(X, y, trial_index, window, norm=True):
+    """Average trials for each feature in X
+
+    Parameters
+     ----------
+     X : 2D array-like (n_sample, n_feature)
+         The data to decompose
+     y : 1D array, None by default
+         Sample labels for the data
+     trial_index : 1D array (n_sample, )
+         Each unique entry should match a trial.
+     window : int 
+         Trial length
+     norm : boolean, True by default
+         Norm Xtrial feature level std dev
+
+     Return
+     ------
+     Xave : a 2D arrays (n_feature*unique_y, window)
+         The average trials
+     feature_names : 1D array
+         The names of the features (taken from y)
+    """
+
     evas = []
     eva_names = []
     unique_y = sorted(np.unique(y))
