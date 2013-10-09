@@ -6,7 +6,7 @@ import pandas as pd
 from scipy.sparse import csc_matrix
 
 from fmrilearn.preprocess.data import checkX
-from fmrilearn.preprocess.data import smooth
+from fmrilearn.preprocess.data import smooth as smoothfn
 from fmrilearn.preprocess.data import remove_invariant_features
 
 
@@ -109,8 +109,7 @@ def load_nii(nifiti, clean=True, sparse=False, smooth=False, **kwargs):
     numxyz = nii.shape[0] * nii.shape[1] * nii.shape[2]
     dims = (numxyz, numt)
     
-    # Get into 2d then sparse-ify?  Transpose once
-    # we're sparse
+    # Get into 2d (n_feature, n_sample)
     X = nii.get_data().astype('int16').reshape(dims).transpose()
     if clean:
         X = remove_invariant_features(X, sparse=False)
@@ -126,7 +125,8 @@ def load_nii(nifiti, clean=True, sparse=False, smooth=False, **kwargs):
             ub = kwargs["ub"]
         if "lb" in kwargs:
             ub = kwargs["lb"]
-        X = smooth(X, tr=tr, ub=ub, lb=lb)
+        
+        X = smoothfn(X, tr=tr, ub=ub, lb=lb)
     
     assert checkX(X)
     
