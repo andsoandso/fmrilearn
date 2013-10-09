@@ -115,7 +115,7 @@ def eva(X, y, trial_index, window, norm=True):
     if eva_names.shape[0] != Xeva.shape[1]:
         raise ValueError("eva_names and Xeva don't match")
 
-    return Xeva, feature_names
+    return Xeva, eva_names
 
 
 # def _eva_X(X, trial_index, window):
