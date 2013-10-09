@@ -96,7 +96,7 @@ def by_trial(X, trial_index, window, y):
     assert checkX(Xtrial)
     assert Xtrial.shape[1] == feature_names.shape[0], ("After reshape" 
         "Xtrial and feature_names don't match")
-    assert Xtrial.shape[0] != window, ("Number of samples in Xtrial" 
+    assert Xtrial.shape[0] == window, ("Number of samples in Xtrial" 
         "doesn't match window")
     
     return Xtrial, feature_names
