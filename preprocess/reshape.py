@@ -28,16 +28,14 @@ def restack(X, feature_names):
     # Init the reshaped X (Xstack) and the feature
     # mask, then loop over the rest
     mask = unique_names[0] == feature_names 
-    if mask.shape[0] != feature_names.shape[0]:
-        raise ValueError("The mask was the wrong shape")
-    if np.sum(mask) < 1:
-        raise ValueError("The mask was empty")
+    assert mask.shape[0] == feature_names.shape[0], ("The mask was the" 
+        "wrong shape")
+    assert np.sum(mask) > 1, ("The mask was empty")
 
     Xstack = X[:,mask]
     for name in unique_names[1:]:
         mask = name == feature_names
-        if np.sum(mask) < 1:
-            raise ValueError("The mask was empty")
+        assert np.sum(mask) > 1, ("The mask was empty")
 
         Xname = X[:,mask]
         diff = Xstack.shape[1] - Xname.shape[1]
@@ -52,9 +50,9 @@ def restack(X, feature_names):
         fn_stack.extend([name, ] * nrow)
     fn_stack = np.array(fn_stack)
 
-    checkX(Xstack)
-    if fn_stack.shape[0] != Xstack.shape[0]:
-        raise ValueError("After stacking X and feature_names did not match.")
+    assert checkX(Xstack)
+    assert fn_stack.shape[0] == Xstack.shape[0], ("After stacking X and" 
+        "feature_names did not match.")
 
     return Xstack, fn_stack
 
@@ -95,12 +93,10 @@ def by_trial(X, trial_index, window, y):
     Xtrial = np.hstack(Xlist)
 
     # Sanity
-    checkX(Xtrial)
-    if Xtrial.shape[1] != feature_names.shape[0]:
-        print(Xtrial.shape)
-        print(feature_names.shape)
-        raise ValueError("After reshape Xtrial and feature_names don't match")
-    if Xtrial.shape[0] != window:
-        raise ValueError("Number of samples in Xtrial doesn't match window")
+    assert checkX(Xtrial)
+    assert Xtrial.shape[1] == feature_names.shape[0], ("After reshape" 
+        "Xtrial and feature_names don't match")
+    assert Xtrial.shape[0] != window, ("Number of samples in Xtrial" 
+        "doesn't match window")
     
     return Xtrial, feature_names
