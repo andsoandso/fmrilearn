@@ -6,7 +6,7 @@ import nitime.analysis as nta
 from copy import deepcopy
 from scipy.stats  import spearmanr, pearsonr
 
-from sklearn.preprocessing import scale
+from sklearn.preprocessing import MinMaxScaler
 
 from fmrilearn.info import print_X_info
 from fmrilearn.info import print_label_counts
@@ -71,7 +71,7 @@ def correlateX(X, y, corr="spearman"):
     return np.array(corrs), np.array(ps)
 
 
-def eva(X, y, trial_index, window, norm=True):
+def eva(X, y, trial_index, window):
     """Average trials for each feature in X
 
     Parameters
@@ -98,16 +98,15 @@ def eva(X, y, trial_index, window, norm=True):
     evas = []
     eva_names = []
     unique_y = sorted(np.unique(y))
+    scaler = MinMaxScaler(feature_range=(0, 1))
     for j in range(X.shape[1]):
         Xtrials = []
         
         xj = X[:,j][:,np.newaxis]  ## Need 2D
 
-        # Each feature into trials
+        # Each feature into trials, rescale too
         Xtrial, feature_names = by_trial(xj, trial_index, window, y)
-        if norm:
-            scale(Xtrial.astype(np.float), 
-                    axis=0, with_mean=False, copy=False)
+        Xtrial = scaler.fit_transform(Xtrial.astype(np.float))
 
         # and again by unique_y/feature_names
         Xlabels, _ = by_labels(X=Xtrial.transpose(), y=feature_names)
