@@ -23,7 +23,7 @@ def by_labels(X, y):
     # Find all samples
     y_masks = []
     for y_i in sorted(np.unique(y)):
-        y_masks.append(y_i == y)
+        y_masks.append(np.str(y_i) == y)
     
     # And split each feature into seperate Xs
     Xs = []
