@@ -1,6 +1,6 @@
 """Functions for preprocessing fmrilearn data."""
 
-import json
+from json import load
 import numpy as np
 
 import nitime as nt
@@ -44,7 +44,7 @@ def filterX(filtname, X, targets):
     """
 
     # load the json at name,
-    filterconf = json(open(filtname, "w"))
+    filterconf = load(open(filtname, "r"))
 
     # Validate top level nodes
     validnodes = ["keep", "merge", "join"]
@@ -53,13 +53,13 @@ def filterX(filtname, X, targets):
             raise ValueError("Unknown filter command {0}".format(k))
 
     # Validate that X and targets match
-    for k, v in targets.iteritem():
+    for k, v in targets.items():
         if v.shape[0] != X.shape[0]:
-            raise ValueError("Shape mismatch for target {0}".format(k))
+            raise ValueError("Before: shape mismatch for {0}".format(k))
 
     # test for keep and do that
     if "keep" in filterconf:
-        for k, keepers in filterconf["keep"].iteritem():
+        for k, keepers in filterconf["keep"].items():
             labels = targets[k]    
             mask = construct_filter(labels, keepers, True)
             targets = filter_targets(mask, targets)
@@ -67,16 +67,20 @@ def filterX(filtname, X, targets):
 
     # Test for merge and do that
     if "merge" in filterconf:
-        for k, mmap in filterconf["merge"].iteritem():
+        for k, mmap in filterconf["merge"].items():
             labels = targets[k]
-            targets[k+"_merged"] = merge_labels(labels, mmap)   
+            targets[k] = merge_labels(labels, mmap)   
 
     # Test for join and do that
     if "join" in filterconf:
         raise NotImplementedError("join not yet implemented.  Sorry.")
 
+    # revalidate that X and targets match
+    for k, v in targets.items():
+        if v.shape[0] != X.shape[0]:
+            raise ValueError("After: shape mismatch for {0}".format(k))
     assert checkX(X)
-
+    
     return X, targets
 
 
