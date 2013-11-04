@@ -1,8 +1,26 @@
 """Functions for preprocessing (i.e. filtering, combining) and aggregating
 labels."""
 import numpy as np
-
+import pandas as pd
 from copy import deepcopy
+
+
+def csv_to_targets(csvf):
+    """Convert a csv file to a targets dictionary.
+
+    Note
+    ----
+    Assumes each colummn is a target (i.e. a list of labels), 
+    and that the colname name should be used as the key.
+    """
+
+    # Convert then array-ify
+    targets = pd.read_csv(csvf).to_dict(outtype='list')
+    for k, v in targets.items():
+        targets[k] = np.array(v)
+    
+    return targets
+
 
 def construct_targets(**kwargs):
     """Construct a dictionary of training targets.
@@ -106,7 +124,7 @@ def create_y(labels):
     labels = np.array(labels)
     y = np.zeros_like(labels, dtype=int)
     for ii, lab in enumerate(uniq):
-        mask = labels == lab 
+        mask = labels == np.str(lab) 
         y[mask] = ii
 
     return y
@@ -130,7 +148,7 @@ def construct_filter(labels, keepers, indices=True):
     keepers = list(keepers)
     
     # Init then iterate
-    mask = labels == keepers.pop()
+    mask = labels == np.str(keepers.pop())
     for keep in keepers:
         mask = mask | (labels == np.array(keep))
     
