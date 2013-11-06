@@ -59,7 +59,12 @@ def restack(X, feature_names):
 
 def by_trial(X, trial_index, window, y):
     """Rehapes X so each trial is feature. If y is not None, y
-    is converted to feature_names array."""
+    is converted to feature_names array.
+
+    Note
+    ----
+    In y, np.nan and 'nan' values are ignored.
+    """
 
     ncol = X.shape[1]
 
@@ -79,14 +84,18 @@ def by_trial(X, trial_index, window, y):
     # Find all the trials
     trial_masks = []
     for trial in np.unique(trial_index):
+        if np.isnan(trial): continue
         trial_masks.append(trial == trial_index)
     
     # And split up X
     Xlist = []
     feature_names = []
     for mask in trial_masks:
-        Xlist.append(X[mask,][0:window,])
-        feature_names.append(np.repeat(y[mask][0], ncol))
+        y0 = y[mask][0]
+        if np.str(y0) != 'nan':
+            Xlist.append(X[mask,][0:window,])
+            feature_names.append(np.repeat(y0, ncol))
+
     feature_names = np.hstack(feature_names)
 
     # Create Xtrial by horizonal stacking

@@ -121,6 +121,9 @@ def create_y(labels):
     # Create y, a vector of ints
     # matching sorted entries in labels
     uniq = sorted(set(labels))
+    print("\ty map: "+ ",".join(
+            ["{0} -> {1}".format(lab, ii) for ii, lab in enumerate(uniq)]))
+    
     labels = np.array(labels)
     y = np.zeros_like(labels, dtype=int)
     for ii, lab in enumerate(uniq):
@@ -137,6 +140,7 @@ def locate_short_trials(trial_index, window):
     # if yes add it to the list.
     short_trials = []
     for i in np.unique(trial_index):
+        if np.isnan(i): continue
         if np.sum(i == trial_index) < window:
             short_trials.append(i)
     
