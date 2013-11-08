@@ -16,6 +16,7 @@ from fmrilearn.preprocess.data import checkX
 from fmrilearn.preprocess.reshape import by_trial
 from fmrilearn.preprocess.split import by_labels
 
+from matplotlib.pylab import *
 
 def _create_cond_y(conds, trial_length):
     # Finally create the cond labels
@@ -72,6 +73,51 @@ def correlateX(X, y, corr="spearman"):
     return np.array(corrs), np.array(ps)
 
 
+def _create_dm(y, window):
+    """Create a desgin matrix from y, an array of integers.
+
+    Parameters
+    ----------
+    y : list
+        Where each non zero value represents a cond and its position in the 
+        array is when that event occured.  '0' entries are baseline 
+        conditions.
+
+    Return
+    ------
+    dm : 2d array of binomial data (y.shape[0], np.unique(y))
+        The design matrix
+    """
+    pad = np.zeros(window, dtype=np.int)
+    y = np.concatenate([y, pad])
+    unique_y = np.unique(y)[np.unique(y) != 0]
+
+    dm = np.zeros((y.shape[0], window * unique_y.shape[0]), dtype=np.int)
+    for t in unique_y:
+        idx_h_a = np.arange(unique_y.shape[0])[unique_y == t] * window
+        idx_h_b = idx_h_a + window
+        idx_v = np.arange(y.shape[0])[y == t]
+        for idx_v_a in idx_v:
+            idx_v_b = idx_v_a + window
+            dm[idx_v_a:idx_v_b, idx_h_a:idx_h_b] += np.eye(window)
+
+    np.savetxt('dm.txt',dm,fmt='%1.0f')
+
+    return dm
+
+    # unique_y = sorted(np.unique(y))
+
+    # dm = []
+    # for uy in unique_y:
+    #     print(uy)
+    #     dmw = np.zeros([y.shape[0], window], dtype=np.int)
+    #     for w in range(window):
+    #         dmw[y == uy,:] = 1
+    #     dm.append(dmw)
+    
+    # return np.hstack(dm)
+
+
 def fir(X, y, trial_index, window, tr):
     """ Average trials for each feature in X, using Burock's 
     (2000) method.
@@ -97,20 +143,26 @@ def fir(X, y, trial_index, window, tr):
 
     scaler = MinMaxScaler(feature_range=(0, 1))
     X = scaler.fit_transform(X.astype(np.float))
+    X = np.vstack([X, np.ones((window, X.shape[1]), dtype=np.float)])
 
     ynames = sorted(np.unique(y))
     y = create_y(y)
-    ty = ts.TimeSeries(y, sampling_interval=tr)
-            ## Ensure y is integers
-    
+    dm = _create_dm(y, window)
+    dm = np.matrix(dm)
+
     fir_names = []
     firs = []
     for j in range(X.shape[1]):
-        
-        tj = ts.TimeSeries(X[:,j], sampling_interval=tr)
-        era = nta.EventRelatedAnalyzer(tj, ty, window)
+        x = np.matrix(X[:,j])
+        fir = np.array(np.linalg.pinv(dm.T * dm) * dm.T * x.T)
+        fir = fir.reshape(len(ynames)-1, window)  
+            ## TODO fix this; fir are still 
+            ## wrong independent of this.
+            ## What the fucking fucking fuck!
+            ## Try event time?
+        # import pdb; pdb.set_trace()
 
-        firs.append(era.FIR.data)
+        firs.append(fir)
         fir_names.extend(ynames[1:])  ## Drop nan/baseline
 
     Xfir = np.vstack(firs).transpose()
@@ -209,15 +261,15 @@ if __name__ == '__main__':
     y = targets['rt']
     tc = targets['trialcount']
     Xfir, flfir = fir(X, y, tc, 20, 1.5)
-    Xeva, fleva = eva(X, y, tc, 11, 1.5)
+    #Xeva, fleva = eva(X, y, tc, 11, 1.5)
 
     import matplotlib.pyplot as plt
 
     fig = plt.figure()
-    ax1 = fig.add_subplot(211)
-    ax1.plot(Xeva)
+#    ax1 = fig.add_subplot(211)
+#    ax1.plot(Xeva)
 
-    ax2 = fig.add_subplot(212)
-    ax2.plot(Xfir[1:-1,1:])    
+    ax2 = fig.add_subplot(111)
+    ax2.plot(Xfir[:,1:])    
 
     fig.savefig("eva_fir compare.pdf")
