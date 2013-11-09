@@ -28,7 +28,7 @@ def filterX(filtname, X, targets):
 
     Return
     ------
-        The filtered X, targets
+    The filtered X, targets
 
     Info
     ----
@@ -55,12 +55,12 @@ def filterX(filtname, X, targets):
     # Validate that X and targets match
     for k, v in targets.items():
         if v.shape[0] != X.shape[0]:
-            raise ValueError("Before: shape mismatch for {0}".format(k))
+            raise ValueError("Before: X/target shape mismatch for '{0}'".format(k))
 
     # test for keep and do that
     if "keep" in filterconf:
         for k, keepers in filterconf["keep"].items():
-            labels = targets[k]    
+            labels = targets[k] 
             mask = construct_filter(labels, keepers, True)
             targets = filter_targets(mask, targets)
             X = X[mask,:]
@@ -78,7 +78,7 @@ def filterX(filtname, X, targets):
     # revalidate that X and targets match
     for k, v in targets.items():
         if v.shape[0] != X.shape[0]:
-            raise ValueError("After: shape mismatch for {0}".format(k))
+            raise ValueError("After: X/targets shape mismatch for '{0}'".format(k))
     assert checkX(X)
     
     return X, targets
