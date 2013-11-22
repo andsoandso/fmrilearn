@@ -18,6 +18,7 @@ from fmrilearn.preprocess.split import by_labels
 
 from matplotlib.pylab import *
 
+
 def _create_cond_y(conds, trial_length):
     # Finally create the cond labels
     y = []
@@ -88,6 +89,7 @@ def _create_dm(y, window):
     dm : 2d array of binomial data (y.shape[0], np.unique(y))
         The design matrix
     """
+
     pad = np.zeros(window, dtype=np.int)
     y = np.concatenate([y, pad])
     unique_y = np.unique(y)[np.unique(y) != 0]
@@ -101,21 +103,18 @@ def _create_dm(y, window):
             idx_v_b = idx_v_a + window
             dm[idx_v_a:idx_v_b, idx_h_a:idx_h_b] += np.eye(window)
 
-    np.savetxt('dm.txt',dm,fmt='%1.0f')
+    #_check_dm(dm)
+    #print("Fixing multiple dm entries")
+    #dm =_fix_dm(dm)
+    
+    #print("Checking dm")
+    #_check_dm(dm)
+    #print("done")
+    
+    # Add dummy
+    dm = np.hstack([dm, np.ones(dm.shape[0])[:,np.newaxis]])
 
     return dm
-
-    # unique_y = sorted(np.unique(y))
-
-    # dm = []
-    # for uy in unique_y:
-    #     print(uy)
-    #     dmw = np.zeros([y.shape[0], window], dtype=np.int)
-    #     for w in range(window):
-    #         dmw[y == uy,:] = 1
-    #     dm.append(dmw)
-    
-    # return np.hstack(dm)
 
 
 def fir(X, y, trial_index, window, tr):
@@ -141,26 +140,26 @@ def fir(X, y, trial_index, window, tr):
     feature_names : 1D array
     """
 
+    # Norm then pad.
     scaler = MinMaxScaler(feature_range=(0, 1))
     X = scaler.fit_transform(X.astype(np.float))
     X = np.vstack([X, np.ones((window, X.shape[1]), dtype=np.float)])
 
+    # y becomes integers.
     ynames = sorted(np.unique(y))
     y = create_y(y)
+
+    # Make the design matrix.
     dm = _create_dm(y, window)
     dm = np.matrix(dm)
-
+    
+    # FIR!
     fir_names = []
     firs = []
     for j in range(X.shape[1]):
         x = np.matrix(X[:,j])
-        fir = np.array(np.linalg.pinv(dm.T * dm) * dm.T * x.T)
+        fir = np.array(np.linalg.pinv(dm.T * dm) * dm.T * x.T)[0:-1] ## Drop dummy
         fir = fir.reshape(len(ynames)-1, window)  
-            ## TODO fix this; fir are still 
-            ## wrong independent of this.
-            ## What the fucking fucking fuck!
-            ## Try event time?
-        # import pdb; pdb.set_trace()
 
         firs.append(fir)
         fir_names.extend(ynames[1:])  ## Drop nan/baseline
