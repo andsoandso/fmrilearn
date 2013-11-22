@@ -43,14 +43,22 @@ def masknii(mask, nii, save=None):
     """
     
     mask_data = roi.atlas.get_roi('HarvardOxford', mask)
+    if sum([nz.size for nz in mask_data.get_data().nonzero()]) == 0:
+        raise ValueError("{0} was empty".format(mask))
+
     nii_data = roi.io.read_nifti(nii)
-    masked_nii_data = roi.pre.mask(
-            nii_data, mask_data, standard=False)
+    if sum([nz.size for nz in nii_data.get_data().nonzero()]) == 0:
+        raise ValueError("{0} was empty".format(nii))
+
+    masked_nii_data = roi.pre.mask(nii_data, mask_data, standard=True)
                 ## Even though we're in MNI152 the q_form
                 ## for the fidl converted data is not set correctly
                 ## the s_form is what the q should be
                 ## thus standard=False
     
+    if sum([nz.size for nz in masked_nii_data.get_data().nonzero()]) == 0:
+        raise ValueError("{0} using {1} is empty".format(nii, mask))
+
     if save != None:
         print("Saving {0}.".format(save))
         roi.io.write_nifti(masked_nii_data, save)

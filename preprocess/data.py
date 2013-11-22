@@ -96,6 +96,8 @@ def checkX(X):
     status = False
     if not hasattr(X, "shape"):
         raise TypeError("X must be array-like")
+    elif X.size == 0:
+        raise ValueError("X is empty")
     elif X.ndim != 2:
         raise ValueError("X must be 2d.")
     elif np.isnan(X).any():
