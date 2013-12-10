@@ -1,6 +1,8 @@
 """Custom cross validation index generators."""
 import numpy as np
 from sklearn.cross_validation import KFold        
+from fmrilearn.preprocess.labels import unique_sorted_with_nan
+
 
 class SelectTargets(object):
     """Return indices to select, in order, each unique y_i in y.
@@ -12,6 +14,8 @@ class SelectTargets(object):
     def __init__(self, y, indices=True):
         self.y = np.array(y)
         self.uniquey = sorted(list(set(self.y.tolist())))
+        self.uniquey = unique_sorted_with_nan(self.unique_y)
+
         self.n = len(self.uniquey)
         self.indices = indices
     
@@ -40,10 +44,17 @@ class KFoldChunks(object):
      
     Parameters:
     ----------
-    y - a list of targets.
-    n_folds - number of folds.
-    indices - if True, return lists of ints instead of booleans.
-    min_size - The minimum chuck size (0 are ignored, > 1).
+    y : list 
+        a list of targets/labels.
+    
+    n_folds : int 
+        number of folds.
+    
+    indices : bool
+        if True, return lists of ints instead of booleans.
+    
+    min_size : int 
+        The minimum chuck size (0 are ignored, > 1).
     """
     
     def __init__(self, y, n_folds, indices=True, min_size=1):
@@ -67,6 +78,7 @@ class KFoldChunks(object):
         current = 0
         if self.indices:
             ind = np.arange(self.n)        
+
         for ii, fold_size in enumerate(fold_sizes):
             
             # Select the fold using the unique set,

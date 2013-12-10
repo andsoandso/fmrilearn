@@ -120,9 +120,11 @@ def create_y(labels):
 
     # Create y, a vector of ints
     # matching sorted entries in labels
-    uniq = sorted(set(labels))
+    uniq = sorted(np.unique(labels))
+    uniq = unique_sorted_with_nan(uniq)
+
     print("\ty map: "+ ",".join(
-            ["{0} -> {1}".format(lab, ii) for ii, lab in enumerate(uniq)]))
+            ["{0} -> {1}".format(lab, ii) for ii, lab in enumerate(uniq)]))    
     
     labels = np.array(labels)
     y = np.zeros_like(labels, dtype=int)
@@ -131,6 +133,44 @@ def create_y(labels):
         y[mask] = ii
 
     return y
+
+
+def unique_sorted_with_nan(unique_list):
+    """Given a unique sorted list (not a set()) resorted the list
+    treating 'nan' as null
+    
+    Parameters
+    ---------
+    unique_list - sorted(list)
+        A list whoe elements are unique and sorted
+        by sorted() or an equivilant.
+
+    Note
+    ---
+    A unique_list could be create by 
+        >>> sorted(list(np.unique(list)))
+    or 
+        >>> sorted(list(set(list)))
+    """
+
+    unique_list = list(unique_list)
+    if sorted(unique_list) != unique_list:
+        raise ValueError("unique_list wasn't sorted")
+
+    if len(unique_list) != len(list(np.unique(unique_list))):
+        raise ValueErro("unique_list wasn't unique")
+
+    ## np.nan is sometime converted to 'nan'.
+    ## but if should be first in uniq 
+    nanindex = None
+    try:
+        nanindex = unique_list.index('nan')
+    except ValueError:
+        pass
+    if nanindex is not None:
+        unique_list.insert(0, unique_list.pop(nanindex)) 
+    
+    return unique_list
 
 
 def locate_short_trials(trial_index, window):

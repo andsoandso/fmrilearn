@@ -12,6 +12,7 @@ from fmrilearn.info import print_X_info
 from fmrilearn.info import print_label_counts
 from fmrilearn.preprocess.labels import locate_short_trials
 from fmrilearn.preprocess.labels import create_y
+from fmrilearn.preprocess.labels import unique_sorted_with_nan
 from fmrilearn.preprocess.data import checkX
 from fmrilearn.preprocess.reshape import by_trial
 from fmrilearn.preprocess.split import by_labels
@@ -103,14 +104,6 @@ def _create_dm(y, window):
             idx_v_b = idx_v_a + window
             dm[idx_v_a:idx_v_b, idx_h_a:idx_h_b] += np.eye(window)
 
-    #_check_dm(dm)
-    #print("Fixing multiple dm entries")
-    #dm =_fix_dm(dm)
-    
-    #print("Checking dm")
-    #_check_dm(dm)
-    #print("done")
-    
     # Add dummy
     dm = np.hstack([dm, np.ones(dm.shape[0])[:,np.newaxis]])
 
@@ -145,8 +138,14 @@ def fir(X, y, trial_index, window, tr):
     X = scaler.fit_transform(X.astype(np.float))
     X = np.vstack([X, np.ones((window, X.shape[1]), dtype=np.float)])
 
-    # y becomes integers.
+    # Save the org y names
     ynames = sorted(np.unique(y))
+    print(ynames)
+    ynames = unique_sorted_with_nan(ynames)
+    print(ynames)
+    # ADD resrot HERE
+    
+    # y becomes integers
     y = create_y(y)
 
     # Make the design matrix.
@@ -212,6 +211,7 @@ def eva(X, y, trial_index, window, tr):
         Xtrial, feature_names = by_trial(xj, trial_index, window, y)
         Xtrial = scaler.fit_transform(Xtrial.astype(np.float))
         unique_fn = sorted(np.unique(feature_names))
+        unique_fn = unique_sorted_with_nan(unique_fn)
 
         # and again by unique_y/fe]ature_names
         Xlabels, _ = by_labels(X=Xtrial.transpose(), y=feature_names)

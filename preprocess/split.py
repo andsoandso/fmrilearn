@@ -1,5 +1,5 @@
 import numpy as np
-
+from fmrilearn.preprocess.labels import unique_sorted_with_nan
 
 def by_labels(X, y):
     """Split up X into a list if Xs, one for each unique entry in y.
@@ -22,7 +22,10 @@ def by_labels(X, y):
     # ----`
     # Find all samples
     y_masks = []
-    for y_i in sorted(np.unique(y)):
+    unique_y = sorted(np.unique(y))
+    unique_y = unique_sorted_with_nan(unique_y)
+
+    for y_i in unique_y:
         y_masks.append(np.str(y_i) == y)
     
     # And split each feature into seperate Xs
