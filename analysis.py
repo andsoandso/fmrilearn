@@ -140,10 +140,7 @@ def fir(X, y, trial_index, window, tr):
 
     # Save the org y names
     ynames = sorted(np.unique(y))
-    print(ynames)
     ynames = unique_sorted_with_nan(ynames)
-    print(ynames)
-    # ADD resrot HERE
     
     # y becomes integers
     y = create_y(y)
