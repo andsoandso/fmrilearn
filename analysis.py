@@ -154,7 +154,8 @@ def fir(X, y, trial_index, window, tr):
     firs = []
     for j in range(X.shape[1]):
         x = np.matrix(X[:,j])
-        fir = np.array(np.linalg.pinv(dm.T * dm) * dm.T * x.T)[0:-1] ## Drop dummy
+        fir = np.array(np.linalg.pinv(dm.T * dm) * dm.T * x.T)[0:-1] 
+            ## Drop dummy
         fir = fir.reshape(len(ynames)-1, window)  
 
         firs.append(fir)
