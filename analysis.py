@@ -87,7 +87,7 @@ def _create_dm(y, window):
 
     Return
     ------
-    dm : 2d array of binomial data (y.shape[0], np.unique(y))
+    dm : 2d array of binomial data (y.shape[0], np.unique(y) * window)
         The design matrix
     """
 
@@ -147,6 +147,9 @@ def fir(X, y, trial_index, window, tr):
 
     # Make the design matrix.
     dm = _create_dm(y, window)
+    # dm DEBUG
+    #import time
+    #np.savetxt("dm-{0}".format(time.strftime("%m_%d_%Y_%H_%s_%m")), dm, fmt="%1.0f")
     dm = np.matrix(dm)
     
     # FIR!

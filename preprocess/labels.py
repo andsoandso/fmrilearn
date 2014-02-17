@@ -1,8 +1,10 @@
 """Functions for preprocessing (i.e. filtering, combining) and aggregating
 labels."""
+import csv
 import numpy as np
 import pandas as pd
 from copy import deepcopy
+from json import load
 
 
 def csv_to_targets(csvf):
@@ -21,6 +23,33 @@ def csv_to_targets(csvf):
     
     return targets
 
+
+def targets_to_csv(targets, name, header=True):
+    """Write targets to a .csv file.
+
+    Parameters
+    ---------
+    targets : dict
+        A dictionary of training of other metadata targets
+    name : str
+        The csv name (must add '.csv' manually)
+    header : bool
+        Should we write a header matching targets' keys?
+    """
+
+    l = len(targets.values()[0])
+    print(l)
+    head = targets.keys()
+    head.sort()
+
+    with open(name, 'w') as f:
+        csvf = csv.writer(f, delimiter=",")
+        if header:
+            csvf.writerow(head)
+            
+        for i in range(l): 
+            csvf.writerow([str(targets[k][i]) for k in head])         
+        
 
 def construct_targets(**kwargs):
     """Construct a dictionary of training targets.
@@ -47,6 +76,46 @@ def construct_targets(**kwargs):
             raise ValueError("Target value length mismatch")
 
     return targets
+
+
+def tr_pad_targets(targets, tr, nrow, pad=np.nan):
+    """Pad all targets to match the number of rows starting with 0
+    
+    Parameters
+    ----------
+    targets : dict
+        The named (by key) classification targets.
+    tr : str
+        The name of the target in targets that has the TR metadata
+    nrow : int
+        The number of of rows in the data (presumable X) were padding
+        to match
+    pad : str, optional
+        What to use as padding. The 'tr' entry in the new targets
+        is not padded.  It is ints `[0 ... nrow-1]` instead.
+    """
+
+    # If the len match there is nothing to do
+    if targets[tr].shape[0] == nrow:
+        return targets
+
+    # Construct new targets
+    # that are filled with padding, 
+    # but matching type
+    # of the orginal targets
+    #
+    # Then use tr from targets
+    # to insert values from
+    # targets to padded
+    padded = {}
+    padded[tr] = np.arange(nrow)
+    for k, v in targets.items():
+        if k != tr:
+            padded[k] = np.empty(nrow, dtype=v.dtype)
+            padded[k].fill(pad)
+            for i, tr_i in enumerate(targets[tr]):
+                padded[k][tr_i] = v[i]
+    return padded
 
 
 def merge_labels(labels, labelmap):
@@ -108,11 +177,87 @@ def join_labels(*args):
 def filter_targets(index, targets):
     """Use the index to filter targets and return the result."""
     
-    ftargets = {}
+    filtered = {}
     for key, val in targets.items():
-        ftargets[key] = val[index]
-    
-    return ftargets
+        filtered[key] = val[index]
+    return filtered
+
+
+def replace_targets(index, targets, value=np.nan, exclude=("TR",)):
+    """Use the index to replace targets with value"""
+
+    replaced = deepcopy(targets)
+    for key in targets.keys():
+        if key in exclude:
+            continue
+        else:
+            replaced[key][index] = value
+
+    return replaced
+
+
+def reprocess_targets(name, targets, value=None):
+    """ Use a config file to filter targets.
+
+    Parameters
+    ----------
+    name - str, a file path
+        The name of valid json file (see Info)
+    targets - dict-like
+        A dictionary of labels/targets for X. Keys 
+        are names and values are sklearn compatible
+        lebels
+    value : str, object
+        Value to replace not kept entries with
+
+    Return
+    ------
+    The filtered X, targets
+
+    Info
+    ----
+    The named json file has the must can only have 3 
+    top level nodes ["keep", "merge", "join"], one of
+    which must be present.
+
+    Below each top-level key is a label name which must be 
+    present in targets.
+
+    From there it depends on which top-level branch you are in
+        TODO
+    """
+
+    # load the json at name,
+    filterconf = load(open(name, "r"))
+
+    # Validate top level nodes
+    validnodes = ["keep", "merge", "join"]
+    for k in filterconf.keys():
+        if k not in validnodes:
+            raise ValueError("Unknown filter command {0}".format(k))
+
+    # test for keep and do that
+    if "keep" in filterconf:
+        for k, keepers in filterconf["keep"].items():
+            labels = targets[k] 
+            mask = construct_filter(labels, keepers, True)
+
+            # Invert the mask
+            # and use the inv matrix to replace
+            invmask = np.delete(np.arange(labels.shape[0]), mask) 
+            targets = replace_targets(invmask, targets, value) # DEBUG
+
+    # Test for merge and do that
+    if "merge" in filterconf:
+        for k, mmap in filterconf["merge"].items():
+            labels = targets[k]
+            targets[k] = merge_labels(labels, mmap)   
+
+    # Test for join and do that
+    if "join" in filterconf:
+        raise NotImplementedError("join not yet implemented.  Sorry.")
+
+    return targets                                    
 
 
 def create_y(labels):
