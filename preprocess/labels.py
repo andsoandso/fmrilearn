@@ -326,7 +326,7 @@ def locate_short_trials(trial_index, window):
     short_trials = []
     for i in np.unique(trial_index):
         if np.isnan(i): continue
-        if np.sum(i == trial_index) < window:
+        if np.sum(i == trial_index) <= window:
             short_trials.append(i)
     
     return short_trials
