@@ -91,7 +91,11 @@ def by_trial(X, trial_index, window, y):
     Xlist = []
     feature_names = []
     for mask in trial_masks:
-        y0 = y[mask][0]
+        if y is not None:
+            y0 = y[mask][0]
+        else:
+            y0 = None
+        
         if np.str(y0) != 'nan':
             Xlist.append(X[mask,][0:window,])
             feature_names.append(np.repeat(y0, ncol))
